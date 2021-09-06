@@ -143,6 +143,30 @@ func (ba *BitArray) AppendZero() {
 	ba.padding = 7
 }
 
+func (ba *BitArray) GetBit(index int) byte {
+	// TODO: Panic if index is out of range
+	b := index / 8
+	r := index - 8*b
+
+	return (ba.data[b] & (0b10000000 >> r)) >> (7 - r)
+}
+
+func (ba *BitArray) SetBit(index int) {
+	// TODO: Panic if index is out of range
+	b := index / 8
+	r := index - 8*b
+
+	ba.data[b] |= 0b10000000 >> r
+}
+
+func (ba *BitArray) ClearBit(index int) {
+	// TODO: Panic if index is out of range
+	b := index / 8
+	r := index - 8*b
+
+	ba.data[b] &^= 0b10000000 >> r
+}
+
 func (ba *BitArray) append8(v uint8, withTrailing bool) {
 	data, padding := ba.data, ba.padding
 	var rb1, rb2, rp byte

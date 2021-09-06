@@ -269,3 +269,78 @@ func TestAppendZeroAndOne(t *testing.T) {
 		t.Errorf("AppendOne or AppendZero has incorrect padding %d, want %d", ba.padding, 4)
 	}
 }
+
+func TestGetBit(t *testing.T) {
+	ba := New()
+	ba.data = []byte("\xDE\xAD\xBE\xEF")
+	ba.padding = 0
+	for i, bit := range "11011110101011011011111011101111" {
+		var want byte
+		if bit == '1' {
+			want = 1
+		}
+		if ba.GetBit(i) != want {
+			t.Errorf("GetBit(%d)=%d, want %d", i, ba.GetBit(i), want)
+		}
+	}
+}
+
+func TestSetBit(t *testing.T) {
+	tests := []struct {
+		position int
+		want     []byte
+	}{
+		{0, []byte("\xDE\xAD\xBE\xEF")},
+		{2, []byte("\xFE\xAD\xBE\xEF")},
+		{5, []byte("\xDE\xAD\xBE\xEF")},
+		{7, []byte("\xDF\xAD\xBE\xEF")},
+		{11, []byte("\xDE\xBD\xBE\xEF")},
+		{15, []byte("\xDE\xAD\xBE\xEF")},
+		{17, []byte("\xDE\xAD\xFE\xEF")},
+		{23, []byte("\xDE\xAD\xBF\xEF")},
+		{24, []byte("\xDE\xAD\xBE\xEF")},
+		{27, []byte("\xDE\xAD\xBE\xFF")},
+		{31, []byte("\xDE\xAD\xBE\xEF")},
+	}
+
+	ba := New()
+	ba.padding = 0
+
+	for _, test := range tests {
+		ba.data = []byte("\xDE\xAD\xBE\xEF")
+		ba.SetBit(test.position)
+		if !bytes.Equal(ba.data, test.want) {
+			t.Errorf("SetBit(%d) did not work correctly, found %s, want %s", test.position, fmt.Sprintf("%#X", ba.data), fmt.Sprintf("%#X", test.want))
+		}
+	}
+}
+
+func TestClearBit(t *testing.T) {
+	tests := []struct {
+		position int
+		want     []byte
+	}{
+		{0, []byte("\x5E\xAD\xBE\xEF")},
+		{3, []byte("\xCE\xAD\xBE\xEF")},
+		{6, []byte("\xDC\xAD\xBE\xEF")},
+		{7, []byte("\xDE\xAD\xBE\xEF")},
+		{8, []byte("\xDE\x2D\xBE\xEF")},
+		{9, []byte("\xDE\xAD\xBE\xEF")},
+		{16, []byte("\xDE\xAD\x3E\xEF")},
+		{22, []byte("\xDE\xAD\xBC\xEF")},
+		{24, []byte("\xDE\xAD\xBE\x6F")},
+		{27, []byte("\xDE\xAD\xBE\xEF")},
+		{31, []byte("\xDE\xAD\xBE\xEE")},
+	}
+
+	ba := New()
+	ba.padding = 0
+
+	for _, test := range tests {
+		ba.data = []byte("\xDE\xAD\xBE\xEF")
+		ba.ClearBit(test.position)
+		if !bytes.Equal(ba.data, test.want) {
+			t.Errorf("ClearBit(%d) did not work correctly, found %s, want %s", test.position, fmt.Sprintf("%#X", ba.data), fmt.Sprintf("%#X", test.want))
+		}
+	}
+}
