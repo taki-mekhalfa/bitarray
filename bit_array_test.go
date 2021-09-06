@@ -198,3 +198,50 @@ func TestAppend32(t *testing.T) {
 	}
 
 }
+
+func TestAppend64(t *testing.T) {
+	tests := []struct {
+		idx     int
+		ints    []uint64
+		data    []byte
+		padding byte
+		len     int
+	}{
+		{0, []uint64{0xDEADBEEF}, []byte("\xDE\xAD\xBE\xEF"), 0, 32},
+		{1, []uint64{0xDEADBEEEEEEEFEED}, []byte("\xDE\xAD\xBE\xEE\xEE\xEE\xFE\xED"), 0, 64},
+		{2, []uint64{0xDEADBEEEEEEEFED}, []byte("\xDE\xAD\xBE\xEE\xEE\xEE\xFE\xD0"), 4, 60},
+		{3, []uint64{0xDEAD, 0xBEEF}, []byte("\xDE\xAD\xBE\xEF"), 0, 32},
+		{4, []uint64{0xDE, 0xADBE, 0xEF}, []byte("\xDE\xAD\xBE\xEF"), 0, 32},
+		{5, []uint64{0xDEAD, 0x0B, 0x0E, 0x3B, 0x03}, []byte("\xDE\xAD\xBE\xEF"), 0, 32},
+		{6, []uint64{0xDEAD0B0E, 0x3B, 0x03}, []byte("\xDE\xAD\x0B\x0E\xEF"), 0, 40},
+		{7, []uint64{0x07}, []byte("\xE0"), 5, 3},
+		{8, []uint64{0xC0, 0x3F, 0x03, 0xEE}, []byte("\xC0\xFF\xEE"), 0, 24},
+		{9, []uint64{0xC03F03EE}, []byte("\xC0\x3F\x03\xEE"), 0, 32},
+		{10, []uint64{0xC0, 0x3203, 0xEE, 0x0E}, []byte("\xC0\xC8\x0F\xBB\x80"), 6, 34},
+		{11, []uint64{0xDEAD, 0x07, 0x06, 0x05, 0x13, 0x02}, []byte("\xDE\xAD\xFA\xCE"), 0, 32},
+		{12, []uint64{0xDEAD, 0x07, 0x06, 0x05, 0x13, 0x02, 0x1F}, []byte("\xDE\xAD\xFA\xCE\xF8"), 3, 37},
+		{13, []uint64{0x1B, 0xF}, []byte("\xDF\x80"), 7, 9},
+	}
+
+	for _, test := range tests {
+		ba := New()
+		for _, e := range test.ints {
+			ba.Append64(e)
+		}
+
+		data := ba.Bytes()
+
+		if ba.padding != test.padding {
+			t.Errorf("Append64 with test_idx: %d; returned bad padding %d, want: %d", test.idx, ba.padding, test.padding)
+		}
+
+		if ba.Len() != test.len {
+			t.Errorf("Append64 with test_idx: %d; returned bad length %d, want: %d", test.idx, ba.Len(), test.len)
+		}
+
+		if !bytes.Equal(data, test.data) {
+			t.Errorf("Append64 with test_idx: %d; returned bad data %s, want: %s", test.idx, fmt.Sprintf("%#X", data), fmt.Sprintf("%#X", test.data))
+		}
+	}
+
+}

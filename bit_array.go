@@ -40,55 +40,6 @@ func (ba *BitArray) Bytes() []byte {
 	return data
 }
 
-func mergeWithoutTrailing(b1, padding, b2 byte) (rb1 byte, rb2 byte, oneByte bool, rp byte) {
-	if b2 == 0 {
-		return b1, 0, true, padding - 1
-	}
-
-	b2Len := len8tab[b2]
-	if b2Len <= padding {
-		rb1 = b1 | b2<<(padding-b2Len)
-		return rb1, 0, true, padding - b2Len
-	}
-
-	rb1 = b1 | b2>>(b2Len-padding)
-
-	rp = (8 - b2Len + padding)
-	rb2 = b2 << rp
-	return rb1, rb2, false, rp
-}
-
-func mergeWithTrailing(b1, padding, b2 byte) (rb1 byte, rb2 byte, oneByte bool, rp byte) {
-	if padding == 8 {
-		return b2, 0, true, 0
-	}
-
-	rb1 = b1 | b2>>(8-padding)
-	rb2 = b2 << padding
-
-	return rb1, rb2, false, padding
-}
-
-func (ba *BitArray) append8(v uint8, withTrailing bool) {
-	data, padding := ba.data, ba.padding
-	var rb1, rb2, rp byte
-	var oneByte bool
-
-	if withTrailing {
-		rb1, rb2, oneByte, rp = mergeWithTrailing(data[len(data)-1], padding, v)
-	} else {
-		rb1, rb2, oneByte, rp = mergeWithoutTrailing(data[len(data)-1], padding, v)
-	}
-
-	data[len(data)-1] = rb1
-	if !oneByte {
-		data = append(data, rb2)
-	}
-
-	ba.data = data
-	ba.padding = rp
-}
-
 func (ba *BitArray) Append8(v uint8) {
 	ba.append8(v, false)
 }
@@ -129,6 +80,48 @@ func (ba *BitArray) Append32(v uint32) {
 	}
 }
 
+func (ba *BitArray) Append64(v uint64) {
+	withTrailing := false
+
+	if b8 := byte(v >> 56); b8 != 0 {
+		ba.append8(b8, false)
+		withTrailing = true
+	}
+
+	if b7 := byte((v >> 48) & 0xff); b7 != 0 || withTrailing {
+		ba.append8(b7, withTrailing)
+		withTrailing = true
+	}
+
+	if b6 := byte((v >> 40) & 0xff); b6 != 0 || withTrailing {
+		ba.append8(b6, withTrailing)
+		withTrailing = true
+	}
+
+	if b5 := byte((v >> 32) & 0xff); b5 != 0 || withTrailing {
+		ba.append8(b5, withTrailing)
+	}
+
+	if b4 := byte(v >> 24); b4 != 0 {
+		ba.append8(b4, false)
+		withTrailing = true
+	}
+
+	if b3 := byte((v >> 16) & 0xff); b3 != 0 || withTrailing {
+		ba.append8(b3, withTrailing)
+		withTrailing = true
+	}
+
+	if b2 := byte((v >> 8) & 0xff); b2 != 0 || withTrailing {
+		ba.append8(b2, withTrailing)
+		withTrailing = true
+	}
+
+	if b1 := byte(v & 0xff); b1 != 0 || withTrailing {
+		ba.append8(b1, withTrailing)
+	}
+}
+
 func (ba *BitArray) AppendOne() {
 	if ba.padding != 0 {
 		ba.padding -= 1
@@ -148,4 +141,53 @@ func (ba *BitArray) AppendZero() {
 
 	ba.data = append(ba.data, 0)
 	ba.padding = 7
+}
+
+func (ba *BitArray) append8(v uint8, withTrailing bool) {
+	data, padding := ba.data, ba.padding
+	var rb1, rb2, rp byte
+	var oneByte bool
+
+	if withTrailing {
+		rb1, rb2, oneByte, rp = mergeWithTrailing(data[len(data)-1], padding, v)
+	} else {
+		rb1, rb2, oneByte, rp = mergeWithoutTrailing(data[len(data)-1], padding, v)
+	}
+
+	data[len(data)-1] = rb1
+	if !oneByte {
+		data = append(data, rb2)
+	}
+
+	ba.data = data
+	ba.padding = rp
+}
+
+func mergeWithoutTrailing(b1, padding, b2 byte) (rb1 byte, rb2 byte, oneByte bool, rp byte) {
+	if b2 == 0 {
+		return b1, 0, true, padding - 1
+	}
+
+	b2Len := len8tab[b2]
+	if b2Len <= padding {
+		rb1 = b1 | b2<<(padding-b2Len)
+		return rb1, 0, true, padding - b2Len
+	}
+
+	rb1 = b1 | b2>>(b2Len-padding)
+
+	rp = (8 - b2Len + padding)
+	rb2 = b2 << rp
+	return rb1, rb2, false, rp
+}
+
+func mergeWithTrailing(b1, padding, b2 byte) (rb1 byte, rb2 byte, oneByte bool, rp byte) {
+	if padding == 8 {
+		return b2, 0, true, 0
+	}
+
+	rb1 = b1 | b2>>(8-padding)
+	rb2 = b2 << padding
+
+	return rb1, rb2, false, padding
 }
