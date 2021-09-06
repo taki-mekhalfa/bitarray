@@ -245,3 +245,27 @@ func TestAppend64(t *testing.T) {
 	}
 
 }
+
+func TestAppendZeroAndOne(t *testing.T) {
+	ba := New()
+	for _, b := range "110111101010110110111110111011110000" {
+		if b == '1' {
+			ba.AppendOne()
+		} else {
+			ba.AppendZero()
+		}
+	}
+
+	data := ba.Bytes()
+	if !bytes.Equal(data, []byte("\xDE\xAD\xBE\xEF\x00")) {
+		t.Errorf("AppendOne or AppendZero returned bad data %s, want %s", fmt.Sprintf("%#X", data), fmt.Sprintf("%#X", []byte("\xDE\xAD\xBE\xEF\x00")))
+	}
+
+	if ba.Len() != 36 {
+		t.Errorf("AppendOne or AppendZero returned bad size %d, want %d", ba.Len(), 32)
+	}
+
+	if ba.padding != 4 {
+		t.Errorf("AppendOne or AppendZero has incorrect padding %d, want %d", ba.padding, 4)
+	}
+}
