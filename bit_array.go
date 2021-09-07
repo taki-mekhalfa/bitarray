@@ -1,5 +1,7 @@
 package bitarray
 
+import "fmt"
+
 const len8tab = "" +
 	"\x00\x01\x02\x02\x03\x03\x03\x03\x04\x04\x04\x04\x04\x04\x04\x04" +
 	"\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05" +
@@ -144,7 +146,9 @@ func (ba *BitArray) AppendZero() {
 }
 
 func (ba *BitArray) GetBit(index int) byte {
-	// TODO: Panic if index is out of range
+	if index >= ba.Len() {
+		panic(fmt.Sprintf("bit index out of range [%d] with length %d", index, ba.Len()))
+	}
 	b := index / 8
 	r := index - 8*b
 
@@ -152,7 +156,9 @@ func (ba *BitArray) GetBit(index int) byte {
 }
 
 func (ba *BitArray) SetBit(index int) {
-	// TODO: Panic if index is out of range
+	if index >= ba.Len() {
+		panic(fmt.Sprintf("bit index out of range [%d] with length %d", index, ba.Len()))
+	}
 	b := index / 8
 	r := index - 8*b
 
@@ -160,7 +166,9 @@ func (ba *BitArray) SetBit(index int) {
 }
 
 func (ba *BitArray) ClearBit(index int) {
-	// TODO: Panic if index is out of range
+	if index >= ba.Len() {
+		panic(fmt.Sprintf("bit index out of range [%d] with length %d", index, ba.Len()))
+	}
 	b := index / 8
 	r := index - 8*b
 
