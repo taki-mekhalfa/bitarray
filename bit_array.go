@@ -1,3 +1,7 @@
+// Package bitarray implements a simple bit array structure.
+// The implementation is memory efficient as bits are actually stored in
+// on memory bit (excluding a constant overhead).
+
 package bitarray
 
 import "fmt"
@@ -20,11 +24,13 @@ const len8tab = "" +
 	"\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" +
 	"\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08"
 
+// BitArray is the actual data structure.
 type BitArray struct {
 	data    []byte
 	padding byte
 }
 
+// New returns a new bit array ready to use with length of 0.
 func New() *BitArray {
 	return &BitArray{
 		data:    []byte{0},
@@ -32,10 +38,15 @@ func New() *BitArray {
 	}
 }
 
+// Len returns the length (number of bits) of the bit array.
 func (ba *BitArray) Len() int {
 	return 8*len(ba.data) - int(ba.padding)
 }
 
+// Bytes returns the underlying bit data as an array of bytes.
+// It returns a copy, so modifications on the returned slice are not reflected on the content of the bit array.
+// As the number of bits might not be a multiple of 8,
+// the slice is zero padded and the user should rely on Len to infer the number of padding bits.
 func (ba *BitArray) Bytes() []byte {
 	if ba.Len() == 0 {
 		return []byte{}
@@ -46,10 +57,14 @@ func (ba *BitArray) Bytes() []byte {
 	return data
 }
 
+// Append8 appends a uint8 to the bit array.
+// All trailing zeros are removes, so appending 0b00001001 will actually only append `1001`.
 func (ba *BitArray) Append8(v uint8) {
 	ba.append8(v, false)
 }
 
+// Append16 appends a uint16 to the bit array.
+// All trailing zeros are removed, so appending 0b0000000100000111 will actually only append `100000111`.
 func (ba *BitArray) Append16(v uint16) {
 	b2, b1 := byte(v>>8), byte(v&0xff)
 
@@ -63,6 +78,8 @@ func (ba *BitArray) Append16(v uint16) {
 
 }
 
+// Append32 appends a uint32 to the bit array.
+// All trailing zeros are removed.
 func (ba *BitArray) Append32(v uint32) {
 	withTrailing := false
 
@@ -86,6 +103,8 @@ func (ba *BitArray) Append32(v uint32) {
 	}
 }
 
+// Append64 appends a uint64 to the bit array.
+// All trailing zeros are removed.
 func (ba *BitArray) Append64(v uint64) {
 	withTrailing := false
 
@@ -128,6 +147,7 @@ func (ba *BitArray) Append64(v uint64) {
 	}
 }
 
+// AppendOne appends a `1` to the bit array.
 func (ba *BitArray) AppendOne() {
 	if ba.padding != 0 {
 		ba.padding -= 1
@@ -139,6 +159,7 @@ func (ba *BitArray) AppendOne() {
 	ba.padding = 7
 }
 
+// AppendZero appends a `0` to the bit array.
 func (ba *BitArray) AppendZero() {
 	if ba.padding != 0 {
 		ba.padding -= 1
@@ -149,6 +170,7 @@ func (ba *BitArray) AppendZero() {
 	ba.padding = 7
 }
 
+// GetBit returns the bit at position `index` and will panic if index is out of range.
 func (ba *BitArray) GetBit(index int) byte {
 	if index >= ba.Len() {
 		panic(fmt.Sprintf("bit index out of range [%d] with length %d", index, ba.Len()))
@@ -159,6 +181,7 @@ func (ba *BitArray) GetBit(index int) byte {
 	return (ba.data[b] & (0b10000000 >> r)) >> (7 - r)
 }
 
+// SetBit sets the bit at position `index` to `1` and will panic if index is out of range.
 func (ba *BitArray) SetBit(index int) {
 	if index >= ba.Len() {
 		panic(fmt.Sprintf("bit index out of range [%d] with length %d", index, ba.Len()))
@@ -169,6 +192,7 @@ func (ba *BitArray) SetBit(index int) {
 	ba.data[b] |= 0b10000000 >> r
 }
 
+// ClearBit clears the bit at position `index` to (sets it to `0`) and will panic if index is out of range.
 func (ba *BitArray) ClearBit(index int) {
 	if index >= ba.Len() {
 		panic(fmt.Sprintf("bit index out of range [%d] with length %d", index, ba.Len()))
