@@ -37,6 +37,10 @@ func (ba *BitArray) Len() int {
 }
 
 func (ba *BitArray) Bytes() []byte {
+	if ba.Len() == 0 {
+		return []byte{}
+	}
+
 	data := make([]byte, len(ba.data))
 	copy(data, ba.data)
 	return data
