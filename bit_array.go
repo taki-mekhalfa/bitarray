@@ -4,25 +4,13 @@
 
 package bitarray
 
-import "fmt"
+import (
+	"fmt"
+)
 
-const len8tab = "" +
-	"\x00\x01\x02\x02\x03\x03\x03\x03\x04\x04\x04\x04\x04\x04\x04\x04" +
-	"\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05\x05" +
-	"\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06" +
-	"\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06\x06" +
-	"\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07" +
-	"\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07" +
-	"\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07" +
-	"\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07" +
-	"\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" +
-	"\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" +
-	"\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" +
-	"\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" +
-	"\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" +
-	"\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" +
-	"\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08" +
-	"\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08"
+const uintSize = 32 << (^uint(0) >> 63) // 32 or 64
+// UintSize is the size of a uint in bits.
+const UintSize = uintSize
 
 // BitArray is the actual data structure.
 type BitArray struct {
@@ -48,103 +36,13 @@ func (ba *BitArray) Len() int {
 // As the number of bits might not be a multiple of 8,
 // the slice is zero padded and the user should rely on Len to infer the number of padding bits.
 func (ba *BitArray) Bytes() []byte {
-	if ba.Len() == 0 {
+	if ba.Len() == 1 && ba.padding == 0 {
 		return []byte{}
 	}
 
 	data := make([]byte, len(ba.data))
 	copy(data, ba.data)
 	return data
-}
-
-// Append8 appends a uint8 to the bit array.
-// All trailing zeros are removes, so appending 0b00001001 will actually only append `1001`.
-func (ba *BitArray) Append8(v uint8) {
-	ba.append8(v, false)
-}
-
-// Append16 appends a uint16 to the bit array.
-// All trailing zeros are removed, so appending 0b0000000100000111 will actually only append `100000111`.
-func (ba *BitArray) Append16(v uint16) {
-	b2, b1 := byte(v>>8), byte(v&0xff)
-
-	if b2 != 0 {
-		ba.append8(b2, false)
-		ba.append8(b1, true)
-		return
-	}
-
-	ba.append8(b1, false)
-
-}
-
-// Append32 appends a uint32 to the bit array.
-// All trailing zeros are removed.
-func (ba *BitArray) Append32(v uint32) {
-	withTrailing := false
-
-	if b4 := byte(v >> 24); b4 != 0 {
-		ba.append8(b4, false)
-		withTrailing = true
-	}
-
-	if b3 := byte((v >> 16) & 0xff); b3 != 0 || withTrailing {
-		ba.append8(b3, withTrailing)
-		withTrailing = true
-	}
-
-	if b2 := byte((v >> 8) & 0xff); b2 != 0 || withTrailing {
-		ba.append8(b2, withTrailing)
-		withTrailing = true
-	}
-
-	if b1 := byte(v & 0xff); b1 != 0 || withTrailing {
-		ba.append8(b1, withTrailing)
-	}
-}
-
-// Append64 appends a uint64 to the bit array.
-// All trailing zeros are removed.
-func (ba *BitArray) Append64(v uint64) {
-	withTrailing := false
-
-	if b8 := byte(v >> 56); b8 != 0 {
-		ba.append8(b8, false)
-		withTrailing = true
-	}
-
-	if b7 := byte((v >> 48) & 0xff); b7 != 0 || withTrailing {
-		ba.append8(b7, withTrailing)
-		withTrailing = true
-	}
-
-	if b6 := byte((v >> 40) & 0xff); b6 != 0 || withTrailing {
-		ba.append8(b6, withTrailing)
-		withTrailing = true
-	}
-
-	if b5 := byte((v >> 32) & 0xff); b5 != 0 || withTrailing {
-		ba.append8(b5, withTrailing)
-	}
-
-	if b4 := byte(v >> 24); b4 != 0 {
-		ba.append8(b4, false)
-		withTrailing = true
-	}
-
-	if b3 := byte((v >> 16) & 0xff); b3 != 0 || withTrailing {
-		ba.append8(b3, withTrailing)
-		withTrailing = true
-	}
-
-	if b2 := byte((v >> 8) & 0xff); b2 != 0 || withTrailing {
-		ba.append8(b2, withTrailing)
-		withTrailing = true
-	}
-
-	if b1 := byte(v & 0xff); b1 != 0 || withTrailing {
-		ba.append8(b1, withTrailing)
-	}
 }
 
 // AppendOne appends a `1` to the bit array.
@@ -168,6 +66,18 @@ func (ba *BitArray) AppendZero() {
 
 	ba.data = append(ba.data, 0)
 	ba.padding = 7
+}
+
+// AppendBit appends a `0` or `1` depending on the value of the bit argument.
+// If bit is neither 0 nor 1, AppendBit will panic.
+func (ba *BitArray) AppendBit(bit byte) {
+	if bit == 0 {
+		ba.AppendZero()
+	} else if bit == 1 {
+		ba.AppendOne()
+	} else {
+		panic(fmt.Sprintf("bit should be 0 or 1, given %d", bit))
+	}
 }
 
 // GetBit returns the bit at position `index` and will panic if index is out of range.
@@ -203,51 +113,80 @@ func (ba *BitArray) ClearBit(index int) {
 	ba.data[b] &^= 0b10000000 >> r
 }
 
-func (ba *BitArray) append8(v uint8, withTrailing bool) {
-	data, padding := ba.data, ba.padding
-	var rb1, rb2, rp byte
-	var oneByte bool
-
-	if withTrailing {
-		rb1, rb2, oneByte, rp = mergeWithTrailing(data[len(data)-1], padding, v)
-	} else {
-		rb1, rb2, oneByte, rp = mergeWithoutTrailing(data[len(data)-1], padding, v)
+// Append appends the `nbBits` lowest bits stored in v (of type uint).
+// It will panic if nbBits is larger than 32 or 64 depending on the size of uint on the running machine.
+func (ba *BitArray) Append(v uint, nbBits uint8) {
+	if UintSize == 32 {
+		ba.Append32(uint32(v), nbBits)
+		return
 	}
 
-	data[len(data)-1] = rb1
-	if !oneByte {
-		data = append(data, rb2)
-	}
+	ba.Append64(uint64(v), nbBits)
 
-	ba.data = data
-	ba.padding = rp
 }
 
-func mergeWithoutTrailing(b1, padding, b2 byte) (rb1 byte, rb2 byte, oneByte bool, rp byte) {
-	if b2 == 0 {
-		return b1, 0, true, padding - 1
+// Append8 appends the nbBits lowest bits stored in v (of type uint8).
+// It will panic if nBbits is larger than 8.
+func (ba *BitArray) Append8(v, nbBits uint8) {
+	if nbBits > 8 {
+		panic(fmt.Sprintf("nbBits should not be more than 8, given %d", nbBits))
 	}
 
-	b2Len := len8tab[b2]
-	if b2Len <= padding {
-		rb1 = b1 | b2<<(padding-b2Len)
-		return rb1, 0, true, padding - b2Len
+	v = v & (0b11111111 >> (8 - nbBits))
+
+	if nbBits <= ba.padding {
+		ba.data[len(ba.data)-1] |= v << (ba.padding - nbBits)
+		ba.padding -= nbBits
+		return
 	}
 
-	rb1 = b1 | b2>>(b2Len-padding)
-
-	rp = (8 - b2Len + padding)
-	rb2 = b2 << rp
-	return rb1, rb2, false, rp
+	ba.data[len(ba.data)-1] |= v >> (nbBits - ba.padding)
+	ba.padding = (8 - nbBits + ba.padding)
+	ba.data = append(ba.data, v<<ba.padding)
 }
 
-func mergeWithTrailing(b1, padding, b2 byte) (rb1 byte, rb2 byte, oneByte bool, rp byte) {
-	if padding == 8 {
-		return b2, 0, true, 0
+// Append16 appends the nbBits lowest bits stored in v (of type uint16).
+// It will panic if nBbits is larger than 16.
+func (ba *BitArray) Append16(v uint16, nbBits uint8) {
+	if nbBits > 16 {
+		panic(fmt.Sprintf("nbBits should not be more than 16, given %d", nbBits))
 	}
 
-	rb1 = b1 | b2>>(8-padding)
-	rb2 = b2 << padding
+	if nbBits > 8 {
+		ba.Append8(uint8(v>>8), nbBits-8)
+		nbBits = 8
+	}
+	ba.Append8(uint8(v), nbBits)
+}
 
-	return rb1, rb2, false, padding
+// Append32 appends the nbBits lowest bits stored in v (of type uint32).
+// It will panic if nBbits is larger than 32.
+func (ba *BitArray) Append32(v uint32, nbBits uint8) {
+	if nbBits > 32 {
+		panic(fmt.Sprintf("nbBits should not be more than 32, given %d", nbBits))
+	}
+
+	if nbBits > 16 {
+		ba.Append16(uint16(v>>16), nbBits-16)
+		nbBits = 16
+	}
+
+	ba.Append16(uint16(v), nbBits)
+
+}
+
+// Append64 appends the nbBits lowest bits stored in v (of type uint64).
+// It will panic if nBbits is larger than 64.
+func (ba *BitArray) Append64(v uint64, nbBits uint8) {
+	if nbBits > 64 {
+		panic(fmt.Sprintf("nbBits should not be more than 32, given %d", nbBits))
+	}
+
+	if nbBits > 32 {
+		ba.Append32(uint32(v>>32), nbBits-32)
+		nbBits = 32
+	}
+
+	ba.Append32(uint32(v), nbBits)
+
 }
