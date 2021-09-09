@@ -16,7 +16,7 @@ const UintSize = uintSize
 // BitArray is the actual data structure.
 type BitArray struct {
 	data    []byte
-	padding byte
+	padding int
 }
 
 // New returns a new bit array ready to use with length of 0.
@@ -116,7 +116,7 @@ func (ba *BitArray) ClearBit(index int) {
 
 // Append appends the `nbBits` lowest bits stored in v (of type uint).
 // It will panic if nbBits is larger than 32 or 64 depending on the size of uint on the running machine.
-func (ba *BitArray) Append(v uint, nbBits uint8) {
+func (ba *BitArray) Append(v uint, nbBits int) {
 	if UintSize == 32 {
 		ba.Append32(uint32(v), nbBits)
 		return
@@ -128,9 +128,9 @@ func (ba *BitArray) Append(v uint, nbBits uint8) {
 
 // Append8 appends the nbBits lowest bits stored in v (of type uint8).
 // It will panic if nBbits is larger than 8.
-func (ba *BitArray) Append8(v, nbBits uint8) {
-	if nbBits > 8 {
-		panic(fmt.Sprintf("nbBits should not be more than 8, given %d", nbBits))
+func (ba *BitArray) Append8(v uint8, nbBits int) {
+	if nbBits < 0 || nbBits > 8 {
+		panic(fmt.Sprintf("nbBits should not be between 0 and 8, given %d", nbBits))
 	}
 
 	v = v & (0b11111111 >> (8 - nbBits))
@@ -148,9 +148,9 @@ func (ba *BitArray) Append8(v, nbBits uint8) {
 
 // Append16 appends the nbBits lowest bits stored in v (of type uint16).
 // It will panic if nBbits is larger than 16.
-func (ba *BitArray) Append16(v uint16, nbBits uint8) {
-	if nbBits > 16 {
-		panic(fmt.Sprintf("nbBits should not be more than 16, given %d", nbBits))
+func (ba *BitArray) Append16(v uint16, nbBits int) {
+	if nbBits < 0 || nbBits > 16 {
+		panic(fmt.Sprintf("nbBits should not be between 0 and 16, given %d", nbBits))
 	}
 
 	if nbBits > 8 {
@@ -162,9 +162,9 @@ func (ba *BitArray) Append16(v uint16, nbBits uint8) {
 
 // Append32 appends the nbBits lowest bits stored in v (of type uint32).
 // It will panic if nBbits is larger than 32.
-func (ba *BitArray) Append32(v uint32, nbBits uint8) {
-	if nbBits > 32 {
-		panic(fmt.Sprintf("nbBits should not be more than 32, given %d", nbBits))
+func (ba *BitArray) Append32(v uint32, nbBits int) {
+	if nbBits < 0 || nbBits > 32 {
+		panic(fmt.Sprintf("nbBits should not be between 0 and 32, given %d", nbBits))
 	}
 
 	if nbBits > 16 {
@@ -178,9 +178,9 @@ func (ba *BitArray) Append32(v uint32, nbBits uint8) {
 
 // Append64 appends the nbBits lowest bits stored in v (of type uint64).
 // It will panic if nBbits is larger than 64.
-func (ba *BitArray) Append64(v uint64, nbBits uint8) {
-	if nbBits > 64 {
-		panic(fmt.Sprintf("nbBits should not be more than 32, given %d", nbBits))
+func (ba *BitArray) Append64(v uint64, nbBits int) {
+	if nbBits < 0 || nbBits > 64 {
+		panic(fmt.Sprintf("nbBits should not be between 0 and 64, given %d", nbBits))
 	}
 
 	if nbBits > 32 {
@@ -219,6 +219,6 @@ func (ba *BitArray) AppendFromString(bitSeq string) {
 			panic(fmt.Sprintf("the bit sequence appears to be invalid: %v", err))
 		}
 
-		ba.Append64(v, uint8(r))
+		ba.Append64(v, r)
 	}
 }
