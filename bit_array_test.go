@@ -229,3 +229,39 @@ func TestAppend64(t *testing.T) {
 		t.Errorf("returned bad length %d, want: %d", ba.Len(), expectedLen)
 	}
 }
+
+func TestAppendBytes(t *testing.T) {
+	ba := New()
+	ba.AppendBytes([]byte("\xDE\xAD"))
+	ba.AppendBytes([]byte("\xC0\xFF\xEE"))
+
+	data := ba.Bytes()
+	expected := []byte("\xDE\xAD\xC0\xFF\xEE")
+	expectedLen := 40
+
+	if !bytes.Equal(ba.data, expected) {
+		t.Errorf("AppendBytes returned bad data %s, want: %s", fmt.Sprintf("%#X", data), fmt.Sprintf("%#X", expected))
+	}
+
+	if ba.Len() != expectedLen {
+		t.Errorf("returned bad length %d, want: %d", ba.Len(), expectedLen)
+	}
+
+}
+
+func TestAppendFromString(t *testing.T) {
+	ba := New()
+	bitSeq := "110111101010110110111110111011110000000000001011101010101010110111000000000000001111111111101110"
+	ba.AppendFromString(bitSeq)
+	data := ba.Bytes()
+	expected := []byte("\xDE\xAD\xBE\xEF\x00\x0B\xAA\xAD\xC0\x00\xFF\xEE")
+	expectedLen := len(bitSeq)
+
+	if !bytes.Equal(ba.data, expected) {
+		t.Errorf("AppendFromString returned bad data %s, want: %s", fmt.Sprintf("%#X", data), fmt.Sprintf("%#X", expected))
+	}
+
+	if ba.Len() != expectedLen {
+		t.Errorf("returned bad length %d, want: %d", ba.Len(), expectedLen)
+	}
+}

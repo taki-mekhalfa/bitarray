@@ -6,6 +6,7 @@ package bitarray
 
 import (
 	"fmt"
+	"strconv"
 )
 
 const uintSize = 32 << (^uint(0) >> 63) // 32 or 64
@@ -189,4 +190,35 @@ func (ba *BitArray) Append64(v uint64, nbBits uint8) {
 
 	ba.Append32(uint32(v), nbBits)
 
+}
+
+// AppendBytes append a slice of bytes to the bit array
+func (ba *BitArray) AppendBytes(bytes []byte) {
+	for _, b := range bytes {
+		ba.Append8(b, 8)
+	}
+}
+
+// AppendFromString appends a stringified bit sequence to the bit array
+// It will panic if the bit sequence is not valid (consisting only of 0's and 1's)
+func (ba *BitArray) AppendFromString(bitSeq string) {
+	pieces64 := len(bitSeq) / 64
+	r := len(bitSeq) - 64*pieces64
+	for i := 0; i < pieces64; i++ {
+		v, err := strconv.ParseUint(bitSeq[i:i+64], 2, 64)
+		if err != nil {
+			panic(fmt.Sprintf("the bit sequence appears to be invalid: %v", err))
+		}
+
+		ba.Append64(v, 64)
+	}
+
+	if r != 0 {
+		v, err := strconv.ParseUint(bitSeq[64*pieces64:], 2, 64)
+		if err != nil {
+			panic(fmt.Sprintf("the bit sequence appears to be invalid: %v", err))
+		}
+
+		ba.Append64(v, uint8(r))
+	}
 }
