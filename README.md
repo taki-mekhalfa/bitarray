@@ -12,10 +12,10 @@ import "github.com/taki-mekhalfa/bitarray"
 ```go
     // Create a fresh empty bit array
     ba := bitarray.New()
-    ba.Append8(0xDE)
-    ba.Append8(0xAD)
-    ba.Append8(0xBE)
-    ba.Append8(0xEF)
+    ba.Append8(0xDE, 8)
+    ba.Append8(0xAD, 8)
+    ba.Append8(0xBE, 8)
+    ba.Append8(0xEF, 8)
     // Print the bit sequence
     fmt.Printf("%#X\n", ba.Bytes())
     /* Output
@@ -26,10 +26,10 @@ import "github.com/taki-mekhalfa/bitarray"
 ```go
     // Create a fresh empty bit array
     ba := bitarray.New()
-    ba.Append16(0xBADD)
-    ba.Append16(0x0C) // This will only append C=0b1100
-    ba.Append16(0x0A) // This will only append A=0b1010
-    ba.Append16(0xFE)
+    ba.Append16(0xBADD, 16)
+    ba.Append16(0x0C, 4) // This will only append C=0b1100
+    ba.Append16(0x0A, 4) // This will only append A=0b1010
+    ba.Append16(0xFE, 8)
     // Print the bit sequence
     fmt.Printf("%#X\n", ba.Bytes())
     /* Output
@@ -43,10 +43,10 @@ The same goes for Append32 and Append64
 ```go
     // Create a fresh empty bit array
     ba := bitarray.New()
-    ba.Append8(0xD0)
+    ba.Append8(0xD0, 8)
     ba.AppendZero();ba.AppendZero()
     ba.AppendZero();ba.AppendZero()
-    ba.Append8(0x0D)
+    ba.Append8(0x0D, 4)
     // Print the bit sequence
     fmt.Printf("%#X\n", ba.Bytes())
     /* Output
@@ -59,8 +59,8 @@ The same goes for AppendOne
 ```go
     // Create a fresh empty bit array
     ba := bitarray.New()
-    ba.Append32(0xC0FFEE)
-    ba.Append8(0x0E)
+    ba.Append32(0xC0FFEE, 24)
+    ba.Append8(0x0E, 4)
     
     // Print the bit sequence
     fmt.Printf("%#X\n", ba.Bytes())
@@ -79,7 +79,7 @@ The same goes for AppendOne
 ```go
     // Create a fresh empty bit array
     ba := bitarray.New()
-    ba.Append8(0xFA) // 0b11111010
+    ba.Append8(0xFA, 8) // 0b11111010
     fmt.Printf("bit_%d=%d and bit_%d=%d\n", 0, ba.GetBit(0), 7, ba.GetBit(7))
     ba.ClearBit(0)
     fmt.Printf("bit_%d=%d and bit_%d=%d\n", 0, ba.GetBit(0), 7, ba.GetBit(7))
