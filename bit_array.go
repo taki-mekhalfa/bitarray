@@ -227,3 +227,38 @@ func (ba *BitArray) AppendFromString(bitSeq string) {
 		ba.Append64(v, r)
 	}
 }
+
+func (ba *BitArray) Range(i, j int) uint64 {
+
+	if i < 0 || j < 0 {
+		panic(fmt.Sprintf("negative indexes are invalid; given (i=%d, j=%d)", i, j))
+	}
+
+	if i > j {
+		panic(fmt.Sprintf("invalid indexed %d > %d", i, j))
+	}
+
+	if j > ba.Len() {
+		panic(fmt.Sprintf("bit index out of range [%d] with length %d", j, ba.Len()))
+	}
+
+	if j-i > 64 {
+		panic(fmt.Sprintf("the number of queried bits should not be greater than 64 bits; j - i = %d", j-i))
+	}
+
+	var result uint64
+	startingByte := i / 8
+	endingByte := j / 8
+
+	b := ba.data[startingByte]
+	b &= 0xff >> (i % 8)
+	result |= uint64(b)
+
+	for k := startingByte + 1; k <= endingByte; k++ {
+		b = ba.data[k]
+		result = (result << 8) | uint64(b)
+	}
+
+	result >>= 8 - (j % 8)
+	return result
+}
