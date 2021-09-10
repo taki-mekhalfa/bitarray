@@ -91,3 +91,25 @@ The same goes for AppendOne
         bit_0=1 and bit_7=0
     */
 ```
+### AppendBytes
+```go
+    // Create a fresh empty bit array
+    ba := bitarray.New()
+    ba.Append(0xDE, 8)
+    ba.Append(0xAD, 8)
+    ba.AppendBytes([]byte("\xBE\xEF"))
+    fmt.Printf("%#X\n", ba.Bytes())
+    /* Output
+        0XDEADBEEF
+    */
+```
+### AppendFromString
+```go
+    // Create a fresh empty bit array
+    ba := bitarray.New()
+    ba.AppendFromString("11011110101011011011111011101111")
+    fmt.Printf("%#X\n", ba.Bytes())
+    /* Output
+        0XDEADBEEF
+    */
+```
