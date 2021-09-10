@@ -46,6 +46,11 @@ func (ba *BitArray) Bytes() []byte {
 	return data
 }
 
+// Padding returns the number of padding bits at the end of the byte slice returned by the Bytes method
+func (ba *BitArray) Padding() int {
+	return ba.padding
+}
+
 // AppendOne appends a `1` to the bit array.
 func (ba *BitArray) AppendOne() {
 	if ba.padding != 0 {
