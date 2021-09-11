@@ -114,3 +114,28 @@ The same goes for AppendOne
         0XDEADBEEF
     */
 ```
+
+### Extract
+```go
+    // Create a fresh empty bit array
+    ba := bitarray.New()
+    ba.AppendFromString("00010101100100101010110000001111111111101110101010101001001010")
+    res := ba.Extract(20, 44)
+    fmt.Printf("%#X\n", res)
+    /* Output
+        0XC0FFEE
+    */
+```
+### AppendBitArray
+```go
+    ba := bitarray.New()
+	ba.Append(0xDEAD, 16)
+	ba1 := bitarray.New()
+	ba1.Append(0xBEEF, 16)
+
+	ba.AppendBitArray(ba1)
+    fmt.Printf("%#X\n", ba.Bytes())
+    /* Output
+        0XDEADBEEF
+    */
+```
