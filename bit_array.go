@@ -221,6 +221,11 @@ func (ba *BitArray) AppendBytes(bytes []byte, padding int) {
 
 }
 
+// AppendBitArray appends another bit array to the receiving one
+func (ba *BitArray) AppendBitArray(ba1 *BitArray) {
+	ba.AppendBytes(ba1.Bytes(), ba1.Padding())
+}
+
 // AppendFromString appends a stringified bit sequence to the bit array.
 // It will panic if the bit sequence is not valid (consisting only of 0's and 1's).
 func (ba *BitArray) AppendFromString(bitSeq string) {

@@ -249,6 +249,28 @@ func TestAppendBytes(t *testing.T) {
 
 }
 
+func TestAppendBitArray(t *testing.T) {
+	ba := New()
+	ba.Append(0xDEAD, 16)
+	ba1 := New()
+	ba1.Append(0xBEEF, 16)
+
+	ba.AppendBitArray(ba1)
+
+	data := ba.Bytes()
+	expected := []byte("\xDE\xAD\xBE\xEF")
+	expectedLen := 32
+
+	if !bytes.Equal(ba.data, expected) {
+		t.Errorf("AppendBitArray returned bad data %s, want: %s", fmt.Sprintf("%#X", data), fmt.Sprintf("%#X", expected))
+	}
+
+	if ba.Len() != expectedLen {
+		t.Errorf("returned bad length %d, want: %d", ba.Len(), expectedLen)
+	}
+
+}
+
 func TestAppendFromString(t *testing.T) {
 	ba := New()
 	bitSeq := "110111101010110110111110111011110000000000001011101010101010110111000000000000001111111111101110"
