@@ -97,7 +97,8 @@ The same goes for AppendOne
     ba := bitarray.New()
     ba.Append(0xDE, 8)
     ba.Append(0xAD, 8)
-    ba.AppendBytes([]byte("\xBE\xEF"))
+    ba.Append(0xB, 4)
+    ba.AppendBytes([]byte("\xEE\xFA"), 4) // 4 is used to indicate that there are 4 padding bits
     fmt.Printf("%#X\n", ba.Bytes())
     /* Output
         0XDEADBEEF
