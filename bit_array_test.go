@@ -232,12 +232,12 @@ func TestAppend64(t *testing.T) {
 
 func TestAppendBytes(t *testing.T) {
 	ba := New()
-	ba.AppendBytes([]byte("\xDE\xAD"))
-	ba.AppendBytes([]byte("\xC0\xFF\xEE"))
+	ba.AppendBytes([]byte("\xDE\xAD"), 0)
+	ba.AppendBytes([]byte("\xC0\xFF\xEE\xEF"), 4)
 
 	data := ba.Bytes()
-	expected := []byte("\xDE\xAD\xC0\xFF\xEE")
-	expectedLen := 40
+	expected := []byte("\xDE\xAD\xC0\xFF\xEE\xE0")
+	expectedLen := 44
 
 	if !bytes.Equal(ba.data, expected) {
 		t.Errorf("AppendBytes returned bad data %s, want: %s", fmt.Sprintf("%#X", data), fmt.Sprintf("%#X", expected))

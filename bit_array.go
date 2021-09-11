@@ -48,6 +48,9 @@ func (ba *BitArray) Bytes() []byte {
 
 // Padding returns the number of padding bits at the end of the byte slice returned by the Bytes method
 func (ba *BitArray) Padding() int {
+	if ba.Len() == 0 {
+		return 0
+	}
 	return ba.padding
 }
 
@@ -197,11 +200,25 @@ func (ba *BitArray) Append64(v uint64, nbBits int) {
 
 }
 
-// AppendBytes append a slice of bytes to the bit array.
-func (ba *BitArray) AppendBytes(bytes []byte) {
-	for _, b := range bytes {
-		ba.Append8(b, 8)
+// AppendBytes append a slice of bytes to the bit array where
+// padding represents the number of padding bits in the last byte of the input slice.
+// padding must be between 0 and 7 (inclusive) and 0 if bytes is empty, othrwise AppendBytes will panic
+func (ba *BitArray) AppendBytes(bytes []byte, padding int) {
+	if padding < 0 || padding > 8 {
+		panic(fmt.Sprintf("padding should be between 0 and 7; given %d", padding))
 	}
+
+	if len(bytes) == 0 && padding != 0 {
+		panic(fmt.Sprintf("input byte slice is empty but padding is not 0: %d", padding))
+	}
+
+	for i := 0; i < len(bytes)-1; i++ {
+		ba.Append8(bytes[i], 8)
+	}
+
+	lastByte := bytes[len(bytes)-1]
+	ba.Append8(lastByte>>byte(padding), 8-padding)
+
 }
 
 // AppendFromString appends a stringified bit sequence to the bit array.
