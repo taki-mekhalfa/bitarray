@@ -197,15 +197,15 @@ func (ba *BitArray) Append64(v uint64, nbBits int) {
 
 }
 
-// AppendBytes append a slice of bytes to the bit array
+// AppendBytes append a slice of bytes to the bit array.
 func (ba *BitArray) AppendBytes(bytes []byte) {
 	for _, b := range bytes {
 		ba.Append8(b, 8)
 	}
 }
 
-// AppendFromString appends a stringified bit sequence to the bit array
-// It will panic if the bit sequence is not valid (consisting only of 0's and 1's)
+// AppendFromString appends a stringified bit sequence to the bit array.
+// It will panic if the bit sequence is not valid (consisting only of 0's and 1's).
 func (ba *BitArray) AppendFromString(bitSeq string) {
 	pieces64 := len(bitSeq) / 64
 	r := len(bitSeq) - 64*pieces64
@@ -228,37 +228,45 @@ func (ba *BitArray) AppendFromString(bitSeq string) {
 	}
 }
 
-func (ba *BitArray) Range(i, j int) uint64 {
-
+// Extract extracts a range defined by [i, j] from the bit array into a uint64.
+// Semantics of range are pretty similar to slice indexing in golang,
+// the bit at position i is included, the bit at position j is excluded.
+// Indexes must not be negative, j must be strictly greater than i and
+// the number of bits in the range should not exceed 64, otherwise Extract will panic.
+func (ba *BitArray) Extract(i, j int) uint64 {
 	if i < 0 || j < 0 {
 		panic(fmt.Sprintf("negative indexes are invalid; given (i=%d, j=%d)", i, j))
 	}
-
-	if i > j {
-		panic(fmt.Sprintf("invalid indexed %d > %d", i, j))
+	if i >= j {
+		panic(fmt.Sprintf("invalid indexes %d >= %d", i, j))
 	}
-
 	if j > ba.Len() {
 		panic(fmt.Sprintf("bit index out of range [%d] with length %d", j, ba.Len()))
 	}
-
 	if j-i > 64 {
 		panic(fmt.Sprintf("the number of queried bits should not be greater than 64 bits; j - i = %d", j-i))
 	}
 
 	var result uint64
-	startingByte := i / 8
-	endingByte := j / 8
+	startingByte := (i &^ 0x7) >> 3
+	endingByte := ((j - 1) &^ 0x7) >> 3
+	i, j = i&0x7, (j-1)&0x7
 
 	b := ba.data[startingByte]
-	b &= 0xff >> (i % 8)
+	b &= 0xff >> i
 	result |= uint64(b)
 
-	for k := startingByte + 1; k <= endingByte; k++ {
+	if startingByte == endingByte {
+		result = result >> (^j & 0x7)
+		return result
+	}
+
+	for k := startingByte + 1; k < endingByte; k++ {
 		b = ba.data[k]
 		result = (result << 8) | uint64(b)
 	}
 
-	result >>= 8 - (j % 8)
+	result = (result << (j + 1)) | uint64(ba.data[endingByte]>>(^j&0x7))
+
 	return result
 }
