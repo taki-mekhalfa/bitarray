@@ -29,7 +29,7 @@ func New() *BitArray {
 
 // Len returns the length (number of bits) of the bit array.
 func (ba *BitArray) Len() int {
-	return 8*len(ba.data) - int(ba.padding)
+	return (len(ba.data) << 3) - int(ba.padding)
 }
 
 // Bytes returns the underlying bit data as an array of bytes.
@@ -94,10 +94,10 @@ func (ba *BitArray) GetBit(index int) byte {
 	if index >= ba.Len() {
 		panic(fmt.Sprintf("bit index out of range [%d] with length %d", index, ba.Len()))
 	}
-	b := index / 8
-	r := index - 8*b
+	b := (index &^ 0x7) >> 3
+	r := index - (b << 3)
 
-	return (ba.data[b] & (0b10000000 >> r)) >> (7 - r)
+	return (ba.data[b] & (0b10000000 >> r)) >> (^r & 0x7)
 }
 
 // SetBit sets the bit at position `index` to `1` and will panic if index is out of range.
@@ -105,8 +105,8 @@ func (ba *BitArray) SetBit(index int) {
 	if index >= ba.Len() {
 		panic(fmt.Sprintf("bit index out of range [%d] with length %d", index, ba.Len()))
 	}
-	b := index / 8
-	r := index - 8*b
+	b := (index &^ 0x7) >> 3
+	r := index - (b << 3)
 
 	ba.data[b] |= 0b10000000 >> r
 }
@@ -116,8 +116,8 @@ func (ba *BitArray) ClearBit(index int) {
 	if index >= ba.Len() {
 		panic(fmt.Sprintf("bit index out of range [%d] with length %d", index, ba.Len()))
 	}
-	b := index / 8
-	r := index - 8*b
+	b := (index &^ 0x7) >> 3
+	r := index - (b << 3)
 
 	ba.data[b] &^= 0b10000000 >> r
 }
@@ -226,13 +226,13 @@ func (ba *BitArray) AppendBitArray(ba1 *BitArray) {
 	ba.AppendBytes(ba1.Bytes(), ba1.Padding())
 }
 
-// AppendFromString appends a stringified bit sequence to the bit array.
+// AppendString appends a stringified bit sequence to the bit array.
 // It will panic if the bit sequence is not valid (consisting only of 0's and 1's).
-func (ba *BitArray) AppendFromString(bitSeq string) {
-	pieces64 := len(bitSeq) / 64
-	r := len(bitSeq) - 64*pieces64
+func (ba *BitArray) AppendString(bitSeq string) {
+	pieces64 := (len(bitSeq) &^ 0x111111) >> 6
+	r := len(bitSeq) - (pieces64 << 6)
 	for i := 0; i < pieces64; i++ {
-		v, err := strconv.ParseUint(bitSeq[i:i+64], 2, 64)
+		v, err := strconv.ParseUint(bitSeq[i<<6:(i+1)<<6], 2, 64)
 		if err != nil {
 			panic(fmt.Sprintf("the bit sequence appears to be invalid: %v", err))
 		}
@@ -241,7 +241,7 @@ func (ba *BitArray) AppendFromString(bitSeq string) {
 	}
 
 	if r != 0 {
-		v, err := strconv.ParseUint(bitSeq[64*pieces64:], 2, 64)
+		v, err := strconv.ParseUint(bitSeq[pieces64<<6:], 2, 64)
 		if err != nil {
 			panic(fmt.Sprintf("the bit sequence appears to be invalid: %v", err))
 		}
@@ -292,3 +292,40 @@ func (ba *BitArray) Extract(i, j int) uint64 {
 
 	return result
 }
+
+// func (ba *BitArray) ExtractBitArray(i, j int) *BitArray {
+// 	if i < 0 || j < 0 {
+// 		panic(fmt.Sprintf("negative indexes are invalid; given (i=%d, j=%d)", i, j))
+// 	}
+// 	if i > j {
+// 		panic(fmt.Sprintf("invalid indexes %d > %d", i, j))
+// 	}
+// 	if j > ba.Len() {
+// 		panic(fmt.Sprintf("bit index out of range [%d] with length %d", j, ba.Len()))
+// 	}
+
+// 	startingByte := (i &^ 0x7) >> 3
+// 	endingByte := (j &^ 0x7) >> 3
+// 	i, j = i&0x7, j&0x7
+
+// 	data := make([]byte, 1, endingByte-startingByte+1)
+// 	res := &BitArray{data: data}
+
+// 	b :=
+// 	res.Append8(b, 8-i)
+
+// 	if startingByte == endingByte {
+// 		res.Append8(ba.data[startingByte] >> , )
+// 		res.data[0] = res.data[0] >>
+// 		res.padding += 8 - j
+// 		return res
+// 	}
+
+// 	for k := startingByte + 1; k < endingByte; k++ {
+// 		res.Append8(ba.data[k], 8)
+// 	}
+
+// 	res.Append8(ba.data[endingByte]>>(8-j), j)
+
+// 	return res
+// }
