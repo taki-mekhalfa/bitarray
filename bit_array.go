@@ -208,8 +208,11 @@ func (ba *BitArray) AppendBytes(bytes []byte, padding int) {
 		panic(fmt.Sprintf("padding should be between 0 and 7; given %d", padding))
 	}
 
-	if len(bytes) == 0 && padding != 0 {
-		panic(fmt.Sprintf("input byte slice is empty but padding is not 0: %d", padding))
+	if len(bytes) == 0 {
+		if padding != 0 {
+			panic(fmt.Sprintf("input byte slice is empty but padding is not 0: %d", padding))
+		}
+		return
 	}
 
 	for i := 0; i < len(bytes)-1; i++ {

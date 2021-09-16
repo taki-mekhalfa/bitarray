@@ -570,6 +570,13 @@ func TestAppendBytes(t *testing.T) {
 			[]byte("\xab\xf4^\xba.\xd0\xd9\xd2\xc0\xd80e8\xcc\x8f\xe0\x05\xdd\xec\x12\xeb\xcen\xc7\xe5\x02\x1e\xf3\xd8\xfb*\x80"),
 			249,
 		},
+		{
+			8,
+			[]byte{},
+			0,
+			[]byte{},
+			0,
+		},
 	}
 
 	for _, test := range tests {
