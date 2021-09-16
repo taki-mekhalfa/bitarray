@@ -296,6 +296,10 @@ func (ba *BitArray) Extract(i, j int) uint64 {
 	return result
 }
 
+// ExtractBitArray extracts a range defined by [i, j] from the bit array into a new bit array.
+// Semantics of range are pretty similar to slice indexing in golang,
+// the bit at position i is included, the bit at position j is excluded.
+// Indexes must not be negative, j must be greater or equal to i, otherwise ExtractBitArray will panic.
 func (ba *BitArray) ExtractBitArray(i, j int) *BitArray {
 	if i < 0 || j < 0 {
 		panic(fmt.Sprintf("negative indexes are invalid; given (i=%d, j=%d)", i, j))
