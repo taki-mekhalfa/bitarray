@@ -37,7 +37,7 @@ func (ba *BitArray) Len() int {
 // As the number of bits might not be a multiple of 8,
 // the slice is zero padded and the user should rely on Len to infer the number of padding bits.
 func (ba *BitArray) Bytes() []byte {
-	if ba.Len() == 1 && ba.padding == 0 {
+	if ba.Len() == 0 {
 		return []byte{}
 	}
 
@@ -293,39 +293,42 @@ func (ba *BitArray) Extract(i, j int) uint64 {
 	return result
 }
 
-// func (ba *BitArray) ExtractBitArray(i, j int) *BitArray {
-// 	if i < 0 || j < 0 {
-// 		panic(fmt.Sprintf("negative indexes are invalid; given (i=%d, j=%d)", i, j))
-// 	}
-// 	if i > j {
-// 		panic(fmt.Sprintf("invalid indexes %d > %d", i, j))
-// 	}
-// 	if j > ba.Len() {
-// 		panic(fmt.Sprintf("bit index out of range [%d] with length %d", j, ba.Len()))
-// 	}
+func (ba *BitArray) ExtractBitArray(i, j int) *BitArray {
+	if i < 0 || j < 0 {
+		panic(fmt.Sprintf("negative indexes are invalid; given (i=%d, j=%d)", i, j))
+	}
+	if i > j {
+		panic(fmt.Sprintf("invalid indexes %d > %d", i, j))
+	}
+	if j > ba.Len() {
+		panic(fmt.Sprintf("bit index out of range [%d] with length %d", j, ba.Len()))
+	}
 
-// 	startingByte := (i &^ 0x7) >> 3
-// 	endingByte := (j &^ 0x7) >> 3
-// 	i, j = i&0x7, j&0x7
+	if j == i {
+		return New()
+	}
 
-// 	data := make([]byte, 1, endingByte-startingByte+1)
-// 	res := &BitArray{data: data}
+	startingByte := (i &^ 0x7) >> 3
+	endingByte := ((j - 1) &^ 0x7) >> 3
+	i, j = i&0x7, (j-1)&0x7
 
-// 	b :=
-// 	res.Append8(b, 8-i)
+	data := make([]byte, 1, endingByte-startingByte+1)
+	res := &BitArray{data: data, padding: 8}
 
-// 	if startingByte == endingByte {
-// 		res.Append8(ba.data[startingByte] >> , )
-// 		res.data[0] = res.data[0] >>
-// 		res.padding += 8 - j
-// 		return res
-// 	}
+	b := ba.data[startingByte]
+	b &= 0xff >> i
+	res.Append8(b, 8-i)
 
-// 	for k := startingByte + 1; k < endingByte; k++ {
-// 		res.Append8(ba.data[k], 8)
-// 	}
+	if startingByte == endingByte {
+		res.data[0] &^= 0b11111111 >> (j - i + 1)
+		res.padding += 7 - j
+		return res
+	}
 
-// 	res.Append8(ba.data[endingByte]>>(8-j), j)
+	for k := startingByte + 1; k < endingByte; k++ {
+		res.Append8(ba.data[k], 8)
+	}
 
-// 	return res
-// }
+	res.Append8(ba.data[endingByte]>>(^j&0x7), j+1)
+	return res
+}

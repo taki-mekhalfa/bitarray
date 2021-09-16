@@ -753,45 +753,157 @@ func TestExtract(t *testing.T) {
 	}
 }
 
-// func TestExtractBitArray(t *testing.T) {
-// 	tests := []struct {
-// 		id   int
-// 		data []byte
-// 		i    int
-// 		j    int
-// 		want []byte
-// 		len  int
-// 	}{
-// 		{
-// 			0,
-// 			[]byte{0b00101010},
-// 			2,
-// 			5,
-// 			[]byte{0b10100000},
-// 			3,
-// 		},
-// 		// {
-// 		// 	0,
-// 		// 	[]byte("\xb7<\xeeK\xce"),
-// 		// 	0,
-// 		// 	40,
-// 		// 	[]byte("\xb7<\xeeK\xce"),
-// 		// 	40,
-// 		// },
-// 	}
+func TestExtractBitArray(t *testing.T) {
+	tests := []struct {
+		id   int
+		data []byte
+		i    int
+		j    int
+		want []byte
+		len  int
+	}{
+		{
+			0,
+			[]byte{0b00101010},
+			2,
+			5,
+			[]byte{0b10100000},
+			3,
+		},
+		{
+			1,
+			[]byte{0b00101010},
+			6,
+			7,
+			[]byte{0b10000000},
+			1,
+		},
+		{
+			2,
+			[]byte{0b00101010},
+			7,
+			8,
+			[]byte{0b00000000},
+			1,
+		},
+		{
+			3,
+			[]byte{0b00101010},
+			0,
+			8,
+			[]byte{0b00101010},
+			8,
+		},
+		{
+			4,
+			[]byte{0b00101010},
+			2,
+			7,
+			[]byte{0b10101000},
+			5,
+		},
+		{
+			5,
+			[]byte{0b00101010},
+			4,
+			4,
+			[]byte{},
+			0,
+		},
+		{
+			6,
+			[]byte{0b00101010},
+			0,
+			0,
+			[]byte{},
+			0,
+		},
+		{
+			7,
+			[]byte("\xb7<\xeeK\xce"),
+			0,
+			40,
+			[]byte("\xb7<\xeeK\xce"),
+			40,
+		},
+		{
+			8,
+			[]byte("/Y\x13\xd2\x13\xf5\x92"),
+			13,
+			47,
+			[]byte("\"zB~\x80"),
+			34,
+		},
+		{
+			9,
+			[]byte("W\\\n\x12\x0b\xb1\x0e\xf6\x1b\xab7\n\xf5\xb6P"),
+			13,
+			86,
+			[]byte("\x81BAv!\xde\xc3uf\x80"),
+			73,
+		},
+		{
+			10,
+			[]byte("wu@M]Ue\xe9\x0f|\x14\x1b<\xec\xb5\xaf\n\xc1\x0eU-\x0cJ"),
+			34,
+			167,
+			[]byte("uU\x97\xa4=\xf0Pl\xf3\xb2\xd6\xbc+\x049T\xb0"),
+			133,
+		},
+		{
+			11,
+			[]byte("wu@M]Ue\xe9\x0f|\x14\x1b<\xec\xb5\xaf\n\xc1\x0eU-\x0cJ"),
+			167,
+			167,
+			[]byte{},
+			0,
+		},
+		{
+			12,
+			[]byte("E\xfc\t\xb2e\x80q\xfd/\x92d\xdax5\xd2\xbf\x0f\x89\x84(y\xea\xdd\xbcz\xf5\xf2\xb8h\x80,\xef\xc2\x06\xc1"),
+			103,
+			199,
+			[]byte("\x1a\xe9_\x87\xc4\xc2\x14<\xf5n\xde="),
+			96,
+		},
+		{
+			13,
+			[]byte("\xfc\t\xb2e\x80q\xfd/\x92d\xdax5\xd2\xbf\x0f\x89\x84(y\xea\xdd\xbcz\xf5\xf2\xb8h\x80,\xef\xc2\x06\xc1"),
+			0,
+			272,
+			[]byte("\xfc\t\xb2e\x80q\xfd/\x92d\xdax5\xd2\xbf\x0f\x89\x84(y\xea\xdd\xbcz\xf5\xf2\xb8h\x80,\xef\xc2\x06\xc1"),
+			272,
+		},
+		{
+			14,
+			[]byte("\xaeq4;!\xc2\x87r\xceP\n\x0bC\x85FA"),
+			56,
+			57,
+			[]byte("\x00"),
+			1,
+		},
+		{
+			15,
+			[]byte("\xaeq4;!\xc2\x87r\xceP\n\x0bC\x85FA"),
+			57,
+			58,
+			[]byte("\x80"),
+			1,
+		},
+	}
 
-// 	for _, test := range tests {
-// 		ba := New()
-// 		ba.AppendBytes(test.data, 0)
+	for _, test := range tests {
+		ba := New()
+		ba.AppendBytes(test.data, 0)
 
-// 		res := ba.ExtractBitArray(test.i, test.j)
-// 		data := res.Bytes()
-// 		if !bytes.Equal(data, test.want) {
-// 			t.Errorf("%d: ExtractBitArray returned bad data %s, want: %s", test.id, fmt.Sprintf("%#X", data), fmt.Sprintf("%#X", test.want))
-// 		}
+		res := ba.ExtractBitArray(test.i, test.j)
+		data := res.Bytes()
+		if !bytes.Equal(data, test.want) {
+			t.Errorf("%d: ExtractBitArray returned bad data %s, want: %s", test.id, fmt.Sprintf("%#X", data), fmt.Sprintf("%#X", test.want))
+		}
 
-// 		if ba.Len() != test.len {
-// 			t.Errorf("%d: returned bad length %d, want: %d", test.id, ba.Len(), test.len)
-// 		}
-// 	}
-// }
+		if res.Len() != test.len {
+			t.Errorf("%d: returned bad length %d, want: %d", test.id, res.Len(), test.len)
+		}
+	}
+}
