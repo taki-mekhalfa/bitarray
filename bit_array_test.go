@@ -707,6 +707,12 @@ func TestAppendString(t *testing.T) {
 			[]byte("\xd1\xcc\x14\xedv\xdek\xe6M\x7fh\xb1X"),
 			101,
 		},
+		{
+			6,
+			"",
+			[]byte{},
+			0,
+		},
 	}
 	for _, test := range tests {
 		ba := New()
