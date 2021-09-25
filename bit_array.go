@@ -1,4 +1,4 @@
-// Package bitarray implements a simple bit array structure.
+// Package bitarray implements a simple bit-array data structure.
 // The implementation is memory efficient as bits are actually stored in
 // on memory bit (excluding a constant overhead).
 
@@ -10,16 +10,16 @@ import (
 )
 
 const uintSize = 32 << (^uint(0) >> 63) // 32 or 64
-// UintSize is the size of a uint in bits.
+// UintSize is the size of a uint in bits (32 or 64 depending on the platform).
 const UintSize = uintSize
 
-// BitArray is the actual data structure.
+// BitArray is the actual data structure. Users are supposed to use `New` method to instantiate a new bit-array
 type BitArray struct {
 	data    []byte
 	padding int
 }
 
-// New returns a new bit array ready to use with length of 0.
+// New returns a new, ready to be used, empty bit-array.
 func New() *BitArray {
 	return &BitArray{
 		data:    []byte{0},
@@ -27,13 +27,13 @@ func New() *BitArray {
 	}
 }
 
-// Len returns the length (number of bits) of the bit array.
+// Len returns the length (number of bits) of the bit-array.
 func (ba *BitArray) Len() int {
 	return (len(ba.data) << 3) - int(ba.padding)
 }
 
-// Bytes returns the underlying bit data as an array of bytes.
-// It returns a copy, so modifications on the returned slice are not reflected on the content of the bit array.
+// Bytes returns the underlying bit data as a slice of bytes.
+// Note that this method returns a copy, hence modifications on the returned slice are not reflected on the content of the bit-array.
 // As the number of bits might not be a multiple of 8,
 // the slice is zero padded and the user should rely on Len to infer the number of padding bits.
 func (ba *BitArray) Bytes() []byte {
@@ -46,7 +46,8 @@ func (ba *BitArray) Bytes() []byte {
 	return data
 }
 
-// Padding returns the number of padding bits at the end of the byte slice returned by the Bytes method
+// Padding returns the number of padding bits at the end of the byte slice returned by the Bytes method/
+// It is guaranteed that padding is between 0 and 7 (included) and 0 if the bit-array is empty
 func (ba *BitArray) Padding() int {
 	if ba.Len() == 0 {
 		return 0
@@ -111,7 +112,7 @@ func (ba *BitArray) SetBit(index int) {
 	ba.data[b] |= 0b10000000 >> r
 }
 
-// ClearBit clears the bit at position `index` to (sets it to `0`) and will panic if index is out of range.
+// ClearBit clears the bit at position `index` (sets it to `0`) and panics if index is out of range.
 func (ba *BitArray) ClearBit(index int) {
 	if index >= ba.Len() {
 		panic(fmt.Sprintf("bit index out of range [%d] with length %d", index, ba.Len()))
@@ -134,7 +135,7 @@ func (ba *BitArray) Append(v uint, nbBits int) {
 
 }
 
-// Append8 appends the nbBits lowest bits stored in v (of type uint8).
+// Append8 appends the `nbBits` lowest bits stored in v (of type uint8).
 // It will panic if nBbits is larger than 8.
 func (ba *BitArray) Append8(v uint8, nbBits int) {
 	if nbBits < 0 || nbBits > 8 {
@@ -154,7 +155,7 @@ func (ba *BitArray) Append8(v uint8, nbBits int) {
 	ba.data = append(ba.data, v<<ba.padding)
 }
 
-// Append16 appends the nbBits lowest bits stored in v (of type uint16).
+// Append16 appends the `nbBits` lowest bits stored in v (of type uint16).
 // It will panic if nBbits is larger than 16.
 func (ba *BitArray) Append16(v uint16, nbBits int) {
 	if nbBits < 0 || nbBits > 16 {
@@ -168,7 +169,7 @@ func (ba *BitArray) Append16(v uint16, nbBits int) {
 	ba.Append8(uint8(v), nbBits)
 }
 
-// Append32 appends the nbBits lowest bits stored in v (of type uint32).
+// Append32 appends the `nbBits` lowest bits stored in v (of type uint32).
 // It will panic if nBbits is larger than 32.
 func (ba *BitArray) Append32(v uint32, nbBits int) {
 	if nbBits < 0 || nbBits > 32 {
@@ -184,7 +185,7 @@ func (ba *BitArray) Append32(v uint32, nbBits int) {
 
 }
 
-// Append64 appends the nbBits lowest bits stored in v (of type uint64).
+// Append64 appends the `nbBits` lowest bits stored in v (of type uint64).
 // It will panic if nBbits is larger than 64.
 func (ba *BitArray) Append64(v uint64, nbBits int) {
 	if nbBits < 0 || nbBits > 64 {
@@ -200,9 +201,9 @@ func (ba *BitArray) Append64(v uint64, nbBits int) {
 
 }
 
-// AppendBytes append a slice of bytes to the bit array where
+// AppendBytes appends a slice of bytes to the bit-array where
 // padding represents the number of padding bits in the last byte of the input slice.
-// padding must be between 0 and 7 (inclusive) and 0 if bytes is empty, othrwise AppendBytes will panic
+// Padding must be between 0 and 7 (included) and 0 if the slice of bytes is empty, otherwise AppendBytes will panic
 func (ba *BitArray) AppendBytes(bytes []byte, padding int) {
 	if padding < 0 || padding > 8 {
 		panic(fmt.Sprintf("padding should be between 0 and 7; given %d", padding))
@@ -224,12 +225,12 @@ func (ba *BitArray) AppendBytes(bytes []byte, padding int) {
 
 }
 
-// AppendBitArray appends another bit array to the receiving one
+// AppendBitArray appends another bit-array to the receiving one
 func (ba *BitArray) AppendBitArray(ba1 *BitArray) {
 	ba.AppendBytes(ba1.Bytes(), ba1.Padding())
 }
 
-// AppendString appends a stringified bit sequence to the bit array.
+// AppendString appends a stringified bit sequence to the bit-array.
 // It will panic if the bit sequence is not valid (consisting only of 0's and 1's).
 func (ba *BitArray) AppendString(bitSeq string) {
 	pieces64 := (len(bitSeq) &^ 0x111111) >> 6
@@ -253,11 +254,12 @@ func (ba *BitArray) AppendString(bitSeq string) {
 	}
 }
 
-// Extract extracts a range defined by [i, j] from the bit array into a uint64.
+// Extract extracts a range defined by [i, j] from the bit-array into a uint64.
 // Semantics of range are pretty similar to slice indexing in golang,
 // the bit at position i is included, the bit at position j is excluded.
 // Indexes must not be negative, j must be strictly greater than i and
-// the number of bits in the range should not exceed 64, otherwise Extract will panic.
+// the number of bits in the range should not exceed 64 (in order to fit in a uint64), otherwise Extract will panic.
+// The returned uint64 is filled from left to right. Left most empty bits are filled with 0.
 func (ba *BitArray) Extract(i, j int) uint64 {
 	if i < 0 || j < 0 {
 		panic(fmt.Sprintf("negative indexes are invalid; given (i=%d, j=%d)", i, j))
@@ -291,15 +293,15 @@ func (ba *BitArray) Extract(i, j int) uint64 {
 		result = (result << 8) | uint64(b)
 	}
 
-	result = (result << (j + 1)) | uint64(ba.data[endingByte]>>(^j&0x7))
+	result = (result << (j + 1)) | uint64(ba.data[endingByte]>>(7-j))
 
 	return result
 }
 
-// ExtractBitArray extracts a range defined by [i, j] from the bit array into a new bit array.
+// ExtractBitArray extracts a range defined by [i, j] from the bit-array into a new bit-array.
 // Semantics of range are pretty similar to slice indexing in golang,
 // the bit at position i is included, the bit at position j is excluded.
-// Indexes must not be negative, j must be greater or equal to i, otherwise ExtractBitArray will panic.
+// Indexes must not be negative, j must be greater or equal to i and j must not be out of range, otherwise ExtractBitArray will panic.
 func (ba *BitArray) ExtractBitArray(i, j int) *BitArray {
 	if i < 0 || j < 0 {
 		panic(fmt.Sprintf("negative indexes are invalid; given (i=%d, j=%d)", i, j))
@@ -336,6 +338,6 @@ func (ba *BitArray) ExtractBitArray(i, j int) *BitArray {
 		res.Append8(ba.data[k], 8)
 	}
 
-	res.Append8(ba.data[endingByte]>>(^j&0x7), j+1)
+	res.Append8(ba.data[endingByte]>>(7-j), j+1)
 	return res
 }
